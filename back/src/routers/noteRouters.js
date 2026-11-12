@@ -34,6 +34,7 @@ router.post("/", async (req, res) => {
 
         const savedNote = await note.save()
         if(savedNote) {
+            req.app.get("io").emit("notas_actualizadas")
             res.status(201).json({ message: "Nota creada correctamente", note: savedNote})
         }
     } catch (error) {
@@ -42,12 +43,14 @@ router.post("/", async (req, res) => {
     }
 })
 
-//Eiminar una nueva nota
+//Eliminar una nota
 router.delete("/:id", async (req, res) => {
     try {
         const id = req.params.id
         const deleteNote = await Note.findByIdAndDelete(id)
         if (!deleteNote) return res.status(404).json({ error: "Nota no eliminada"})
+        
+        req.app.get("io").emit("notas_actualizadas")
         res.status(200).json({ message: "Nota eliminada correctamente"})
     } catch (error) {
         console.error("Error al eliminar una nota", error)
@@ -62,14 +65,13 @@ router.put("/:id", async (req, res) => {
         const { title, description } = req.body 
         const updatedNote = await Note.findByIdAndUpdate(id, { title, description }, { new: true })
         if(!updatedNote) return res.status(404).json({ error: "Nota no actualizada correctamente" })
+        
+        req.app.get("io").emit("notas_actualizadas")
         res.status(200).json({ message: "Nota actualizada correctamente", note: updatedNote })
     } catch (error) {
         console.error("Error al actualizar una nota", error)
         res.status(500).json({ error: "Internal server error"})
-        
     }
-    
-    
 })
 
 export default router

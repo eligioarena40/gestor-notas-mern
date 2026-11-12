@@ -4,8 +4,10 @@ import ConfirmModal from "../components/ConfirmModal"; // 👈 Importas el modal
 import axios from "axios";
 import formatData from "../utils/formatDate";
 import { toast } from "react-toastify";
+import { io } from "socket.io-client";
 
 const apiURL = import.meta.env.VITE_API_URL;
+const socket = io(apiURL);
 
 const HomePage = () => {
   const [notes, setNotes] = useState([]);
@@ -24,6 +26,21 @@ const HomePage = () => {
     };
 
     fetchData();
+
+        // Escuchar cambios en tiempo real desde cualquier dispositivo
+    socket.on("notas_actualizadas", () => {
+      fetchData();
+    });
+
+    // Sincronizar automáticamente si se recupera la conexión tras un corte de internet/luz
+    socket.on("connect", () => {
+      fetchData();
+    });
+
+    return () => {
+      socket.off("notas_actualizadas");
+      socket.off("connect");
+    };
   }, []);
 
   const confirmDelete = async () => {
